@@ -1,5 +1,7 @@
-htmx-plot.js: plot.min.js htmx-plot.src.js
-	cat plot.min.js htmx-plot.src.js > htmx-plot.js
+PLOT_SRC = node_modules/@observablehq/plot/dist/plot.umd.min.js
+
+htmx-plot.js: $(PLOT_SRC) htmx-plot.src.js
+	cat $(PLOT_SRC) htmx-plot.src.js > htmx-plot.js
 
 install:
 	pnpm install
