@@ -1,9 +1,14 @@
-PLOT_SRC = node_modules/@observablehq/plot/dist/plot.umd.min.js
 
 build: htmx-plot.js
 
-htmx-plot.js: $(PLOT_SRC) htmx-plot.src.js
-	cat $(PLOT_SRC) htmx-plot.src.js > htmx-plot.js
+plot.bundle.js: node_modules/@observablehq/plot
+	node_modules/.bin/esbuild @observablehq/plot \
+		--bundle --format=iife --global-name=Plot --minify \
+		--outfile=plot.bundle.js
+
+
+htmx-plot.js: plot.bundle.js htmx-plot.src.js
+	cat plot.bundle.js htmx-plot.src.js > htmx-plot.js
 
 htmx-plot.src.js: install
 
