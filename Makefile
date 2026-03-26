@@ -1,4 +1,4 @@
-build: install dist/htmx-plot.js
+build: install dist/htmx-plot.js dist/htmx-plot.min.js
 
 dist/plot.bundle.js: node_modules/@observablehq/plot
 	mkdir -p dist
@@ -8,6 +8,9 @@ dist/plot.bundle.js: node_modules/@observablehq/plot
 
 dist/htmx-plot.js: dist/plot.bundle.js htmx-plot.src.js
 	cat dist/plot.bundle.js htmx-plot.src.js > dist/htmx-plot.js
+
+dist/htmx-plot.min.js: dist/htmx-plot.js
+	node_modules/.bin/esbuild dist/htmx-plot.js --minify --outfile=dist/htmx-plot.min.js
 
 install:
 	pnpm install
