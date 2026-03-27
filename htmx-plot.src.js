@@ -1,4 +1,4 @@
-import * as Plot from 'https://cdn.jsdelivr.net/npm/@observablehq/plot@0.6.16/+esm'; // plot-cdn
+import * as Plot from '@observablehq/plot';
 
 const SELECTOR = '[hx-ext~="plot"][hx-plot]';
 

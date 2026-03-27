@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "@biomejs/biome": "latest",
+    "@observablehq/plot": "latest",
     "esbuild": "latest"
   }
 }
