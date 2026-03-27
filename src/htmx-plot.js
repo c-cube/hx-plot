@@ -41,6 +41,7 @@ htmx.defineExtension('plot', {
       try {
         const t = elt.getAttribute('hx-target');
         const target = (t && t !== 'this') ? document.querySelector(t) : elt;
+        if (!target) { console.error('[htmx-plot] target not found:', t); continue; }
         target.innerHTML = renderPlot(JSON.parse(src.textContent));
       } catch (e) {
         console.error('[htmx-plot]', e);
