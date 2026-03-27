@@ -5,10 +5,10 @@
     if (typeof mark !== 'object' || mark === null || typeof mark.type !== 'string') {
       return mark;
     }
-    const { type, data = [], ...opts } = mark;
+    const { type, data, ...opts } = mark;
     const fn = Plot[type];
     if (typeof fn !== 'function') throw new Error('[htmx-plot] unknown mark type: ' + type);
-    return fn(data, opts);
+    return fn(data ?? [], opts);
   }
 
   function renderPlot(json) {
@@ -30,7 +30,7 @@
       if (name !== 'htmx:load') return;
       const root = evt.detail.elt;
       const elts = [
-        ...(root.matches(SELECTOR) ? [root] : []),
+        ...(root.matches?.(SELECTOR) ? [root] : []),
         ...root.querySelectorAll(SELECTOR),
       ];
       for (const elt of elts) {
