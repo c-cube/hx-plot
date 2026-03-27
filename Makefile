@@ -15,9 +15,7 @@ update:
 	@set -e; \
 	VER=$$(curl -sf https://registry.npmjs.org/@observablehq/plot/latest \
 	  | node -e "let d='';process.stdin.on('data',c=>d+=c).on('end',()=>process.stdout.write(JSON.parse(d).version))"); \
-	URL=https://cdn.jsdelivr.net/npm/@observablehq/plot@$${VER}/dist/plot.umd.min.js; \
-	HASH=sha384-$$(curl -sf "$$URL" | openssl dgst -sha384 -binary | openssl base64 -A); \
-	sed -i "s|.*<!-- plot-cdn -->|  <script src=\"$$URL\" integrity=\"$$HASH\" crossorigin=\"anonymous\"></script> <!-- plot-cdn -->|" demo/demo.html; \
+	sed -i "s|.*// plot-cdn|import * as Plot from 'https://cdn.jsdelivr.net/npm/@observablehq/plot@$$VER/+esm'; // plot-cdn|" htmx-plot.src.js; \
 	echo "Updated @observablehq/plot to $$VER"
 
 lint:
