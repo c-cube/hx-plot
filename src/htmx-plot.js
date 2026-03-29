@@ -1,5 +1,6 @@
 import * as Plot from '@observablehq/plot';
 
+const PREFIX = PREFIX;
 const SELECTOR = '[hx-ext~="plot"][hx-plot]';
 
 function toMark(mark) {
@@ -22,7 +23,7 @@ htmx.defineExtension('plot', {
     try {
       return renderPlot(JSON.parse(text));
     } catch (e) {
-      console.error('[htmx-plot]', e);
+      console.error(PREFIX, e);
       return text;
     }
   },
@@ -44,7 +45,7 @@ htmx.defineExtension('plot', {
         if (!target) { console.error('[htmx-plot] target not found:', t); continue; }
         target.innerHTML = renderPlot(JSON.parse(src.textContent));
       } catch (e) {
-        console.error('[htmx-plot]', e);
+        console.error(PREFIX, e);
       }
     }
   }

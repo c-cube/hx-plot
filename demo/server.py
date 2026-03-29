@@ -5,9 +5,12 @@ import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 
 
+SINE_PATH = '/sine'
+
+
 class Handler(SimpleHTTPRequestHandler):
     def do_GET(self):
-        if self.path == '/sine':
+        if self.path == SINE_PATH:
             t = time.time()
             data = [{"x": round(i * 0.1, 2), "y": round(math.sin(i * 0.2 + t), 4)}
                     for i in range(64)]
@@ -27,7 +30,7 @@ class Handler(SimpleHTTPRequestHandler):
 
     def log_message(self, fmt, *args):
         # suppress /sine noise in the terminal
-        if '/sine' not in args[0]:
+        if SINE_PATH not in args[0]:
             super().log_message(fmt, *args)
 
 
