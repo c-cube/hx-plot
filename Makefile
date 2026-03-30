@@ -14,6 +14,9 @@ update:
 	pnpm update @observablehq/plot
 	$(MAKE) build
 
+clean:
+	rm -rf dist
+
 lint:
 	pnpm exec biome lint src/htmx-plot.js
 
