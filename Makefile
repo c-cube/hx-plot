@@ -16,6 +16,9 @@ PNPM ?= pnpm
 install:
 	$(PNPM) install
 
+# Fast path: skip install if node_modules already present
+build-fast: dist/hx-plot.min.js dist/hx-plot.full.min.js
+
 update:
 	$(PNPM) update vega vega-lite
 	$(MAKE) build
