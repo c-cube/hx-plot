@@ -20,6 +20,11 @@ function emit(target, type, detail = {}) {
   target.dispatchEvent(new CustomEvent(type, { bubbles: true, detail }));
 }
 
+function error(target, e, extra = {}) {
+  console.error(PREFIX, e);
+  emit(target, 'hx-plot:error', { error: e, ...extra });
+}
+
 function log(...args) {
   console.debug(PREFIX, ...args);
 }
@@ -30,9 +35,14 @@ async function renderSpec(spec, container) {
   emit(container, 'hx-plot:render-start', { spec });
   const { vega, vegaLite } = await getDeps();
   if (!container.isConnected) { log('render: aborted (detached)', label); return; }
-  await new vega.View(vega.parse(vegaLite.compile(spec).spec), {
-    renderer: 'svg', container, hover: true,
-  }).runAsync();
+  try {
+    await new vega.View(vega.parse(vegaLite.compile(spec).spec), {
+      renderer: 'svg', container, hover: true,
+    }).runAsync();
+  } catch (e) {
+    error(container, e, { spec });
+    return;
+  }
   log('render: done', label);
   emit(container, 'hx-plot:render-done', { spec });
 }
@@ -42,7 +52,9 @@ async function renderPending(root) {
   if (nodes.length) log('pending: found', nodes.length, 'in', root.id || root.tagName);
   for (const node of nodes) {
     node.classList.remove(PENDING_CLASS);
-    renderSpec(JSON.parse(node.dataset.vl), node).catch(e => console.error(PREFIX, e));
+    let spec;
+    try { spec = JSON.parse(node.dataset.vl); } catch (e) { error(node, e); continue; }
+    renderSpec(spec, node).catch(e => error(node, e, { spec }));
   }
 }
 
@@ -60,7 +72,9 @@ function initInline(root) {
     const target = (t && t !== 'this') ? document.querySelector(t) : elt;
     if (!target) { console.error(PREFIX, 'target not found:', t); continue; }
     log('inline: rendering', selector, '\u2192', t || '(self)');
-    renderSpec(JSON.parse(src.textContent), target).catch(e => console.error(PREFIX, e));
+    let spec;
+    try { spec = JSON.parse(src.textContent); } catch (e) { error(target, e); continue; }
+    renderSpec(spec, target).catch(e => error(target, e, { spec }));
   }
 }
 
@@ -85,7 +99,7 @@ export function register(loadDeps) {
         div.dataset.vl = text;
         return div.outerHTML;
       } catch (e) {
-        console.error(PREFIX, 'invalid JSON response —', e.message);
+        error(document, e);
         return text;
       }
     },
