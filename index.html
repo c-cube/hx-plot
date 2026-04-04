@@ -80,6 +80,26 @@
       font-size: 0.9rem;
     }
 
+    h2 { margin-top: 0; }
+    h3 { margin: 1.2rem 0 0.4rem; color: #374151; }
+    pre {
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+      overflow-x: auto;
+      font-size: 0.82rem;
+      line-height: 1.5;
+    }
+    code { font-family: 'Cascadia Code', 'Fira Mono', monospace; }
+    p code {
+      background: #f1f5f9;
+      padding: 0.1em 0.35em;
+      border-radius: 3px;
+      font-size: 0.88em;
+    }
+    a { color: #2563eb; }
+
     #sw-badge {
       display: inline-block;
       font-size: 0.75rem;
@@ -96,7 +116,10 @@
 
 <h1>hx-plot playground</h1>
 <p class="subtitle">
-  Powered by a service worker — works offline after first load.
+  An <a href="https://htmx.org">htmx</a> extension for rendering <a href="https://vega.github.io/vega-lite/">Vega-Lite</a> charts from JSON —
+  add <code>hx-ext="plot"</code> to any element and point it at a JSON spec.
+  <a href="https://github.com/c-cube/hx-plot">GitHub</a> ·
+  Powered by a service worker, works offline after first load.
   <span id="sw-badge">⧗ registering…</span>
 </p>
 
@@ -142,6 +165,44 @@
      hx-indicator="#spinner"></div>
 
 <div id="chart-area"></div>
+
+<hr style="margin: 2.5rem 0 1.5rem; border: none; border-top: 1px solid #e5e7eb;">
+<h2 style="margin-bottom: 1rem;">Usage</h2>
+
+<p>Include htmx and hx-plot, then use <code>hx-ext="plot"</code> on any element.</p>
+
+<h3>Inline JSON</h3>
+<pre><code>&lt;script src="https://unpkg.com/htmx.org@2"&gt;&lt;/script&gt;
+&lt;script src="https://c-cube.github.io/hx-plot/hx-plot.full.min.js"&gt;&lt;/script&gt;
+
+&lt;script id="spec" type="application/json"&gt;
+{
+  "mark": "point",
+  "data": {"values": [{"x": 1, "y": 2}, {"x": 2, "y": 4}]},
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative"},
+    "y": {"field": "y", "type": "quantitative"}
+  }
+}
+&lt;/script&gt;
+
+&lt;div hx-ext="plot" hx-plot="#spec" hx-target="#chart"&gt;&lt;/div&gt;
+&lt;div id="chart"&gt;&lt;/div&gt;</code></pre>
+
+<h3>Fetch from URL</h3>
+<pre><code>&lt;div hx-ext="plot"
+     hx-get="/api/chart"
+     hx-trigger="load"
+     hx-target="#chart"&gt;&lt;/div&gt;
+&lt;div id="chart"&gt;&lt;/div&gt;</code></pre>
+
+<h3>Live updates every 2s with view transitions</h3>
+<pre><code>&lt;div hx-ext="plot"
+     hx-get="/api/chart"
+     hx-trigger="load, every 2s"
+     hx-target="#chart"
+     hx-swap="innerHTML transition:true"&gt;&lt;/div&gt;
+&lt;div id="chart" style="view-transition-name: my-chart"&gt;&lt;/div&gt;</code></pre>
 
 <script>
 // ── example specs ─────────────────────────────────────────────
