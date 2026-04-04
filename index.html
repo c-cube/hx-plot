@@ -166,6 +166,14 @@
 
 <div id="chart-area"></div>
 
+<h2 style="margin-top:2rem">Live sine wave <small style="font-size:0.75em;color:#6b7280;font-weight:400">(polling every 1s via service worker)</small></h2>
+<div hx-ext="plot"
+     hx-get="/api/sine"
+     hx-trigger="load, every 1s"
+     hx-target="#sine-out"
+     hx-swap="innerHTML"></div>
+<div id="sine-out"></div>
+
 <hr style="margin: 2.5rem 0 1.5rem; border: none; border-top: 1px solid #e5e7eb;">
 <h2 style="margin-bottom: 1rem;">Usage</h2>
 

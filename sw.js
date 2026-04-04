@@ -9,6 +9,26 @@ self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
+  if (url.pathname === '/api/sine') {
+    const t = Date.now() / 1000;
+    const values = Array.from({ length: 64 }, (_, i) => ({
+      x: parseFloat((i * 0.1).toFixed(2)),
+      y: parseFloat((Math.sin(i * 0.2 + t)).toFixed(4)),
+    }));
+    const spec = JSON.stringify({
+      mark: 'line',
+      data: { values },
+      encoding: {
+        x: { field: 'x', type: 'quantitative', axis: { title: null } },
+        y: { field: 'y', type: 'quantitative', scale: { domain: [-1.2, 1.2] } },
+      },
+      height: 150,
+      width: 'container',
+    });
+    e.respondWith(new Response(spec, { headers: { 'Content-Type': 'application/json' } }));
+    return;
+  }
+
   if (url.pathname !== '/api/plot') return; // pass through
 
   if (e.request.method === 'POST') {
