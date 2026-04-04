@@ -14,7 +14,7 @@ self.addEventListener('fetch', e => {
   if (e.request.method === 'POST') {
     e.respondWith(
       e.request.text().then(body => {
-        // Accept raw JSON or form-encoded (htmx posts textarea as name=value).
+        // htmx posts textarea as form-urlencoded (name=value).
         const ct = e.request.headers.get('content-type') || '';
         if (ct.includes('application/x-www-form-urlencoded')) {
           body = new URLSearchParams(body).get('spec') ?? body;
@@ -22,8 +22,9 @@ self.addEventListener('fetch', e => {
         try {
           JSON.parse(body);
           stored = body;
-          return new Response(stored, {
-            headers: { 'Content-Type': 'application/json' },
+          return new Response(null, {
+            status: 204,
+            headers: { 'HX-Trigger': 'plotReady' },
           });
         } catch {
           return new Response('Invalid JSON', { status: 400 });

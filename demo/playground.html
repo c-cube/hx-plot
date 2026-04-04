@@ -112,21 +112,17 @@
     <option value="histogram">Histogram</option>
   </select>
   <button class="primary"
-          hx-ext="plot"
           hx-post="/demo/api/plot"
           hx-include="#spec"
-          hx-target="#chart-area"
-          hx-swap="innerHTML"
+          hx-swap="none"
           hx-indicator="#spinner">Render ▶</button>
 </div>
 
 <textarea id="spec" name="spec" spellcheck="false"
           placeholder="Paste Vega-Lite JSON here…"
-          hx-ext="plot"
           hx-post="/demo/api/plot"
           hx-trigger="input changed delay:800ms"
-          hx-target="#chart-area"
-          hx-swap="innerHTML"
+          hx-swap="none"
           hx-indicator="#spinner"></textarea>
 
 <div id="spinner" class="htmx-indicator" aria-live="polite">
@@ -136,6 +132,14 @@
   </svg>
   Rendering…
 </div>
+
+<!-- Fires the GET after SW signals plotReady via HX-Trigger response header -->
+<div hx-ext="plot"
+     hx-get="/demo/api/plot"
+     hx-trigger="plotReady from:body"
+     hx-target="#chart-area"
+     hx-swap="innerHTML"
+     hx-indicator="#spinner"></div>
 
 <div id="chart-area"></div>
 
