@@ -53,14 +53,19 @@
     }
     textarea:focus { outline: 2px solid #2563eb; border-color: transparent; }
 
-    #status {
-      font-size: 0.8rem;
-      color: #666;
-      min-height: 1.2em;
-      margin: 0.3rem 0;
+    .htmx-indicator { opacity: 0; transition: opacity 150ms; pointer-events: none; }
+    .htmx-request .htmx-indicator,
+    .htmx-indicator.htmx-request { opacity: 1; }
+
+    #spinner {
+      font-size: 0.82rem;
+      color: #6b7280;
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
     }
-    #status.error { color: #dc2626; }
-    #status.ok    { color: #16a34a; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    #spinner svg { animation: spin 0.8s linear infinite; }
 
     #chart-area {
       min-height: 60px;
@@ -106,19 +111,31 @@
     <option value="heatmap">Heatmap</option>
     <option value="histogram">Histogram</option>
   </select>
-  <button class="primary" id="render-btn">Render ▶</button>
+  <button class="primary"
+          hx-ext="plot"
+          hx-post="/demo/api/plot"
+          hx-include="#spec"
+          hx-target="#chart-area"
+          hx-swap="innerHTML"
+          hx-indicator="#spinner">Render ▶</button>
 </div>
 
-<textarea id="spec" spellcheck="false" placeholder='Paste Vega-Lite JSON here…'></textarea>
-<div id="status"></div>
+<textarea id="spec" name="spec" spellcheck="false"
+          placeholder="Paste Vega-Lite JSON here…"
+          hx-ext="plot"
+          hx-post="/demo/api/plot"
+          hx-trigger="input changed delay:800ms"
+          hx-target="#chart-area"
+          hx-swap="innerHTML"
+          hx-indicator="#spinner"></textarea>
 
-<!-- The chart loader: hx-get is triggered programmatically after a successful POST -->
-<div id="chart-loader"
-     hx-ext="plot"
-     hx-get="/demo/api/plot"
-     hx-trigger="plotReady"
-     hx-target="#chart-area"
-     hx-swap="innerHTML"></div>
+<div id="spinner" class="htmx-indicator" aria-live="polite">
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <circle cx="7" cy="7" r="5.5" stroke="#d1d5db" stroke-width="2"/>
+    <path d="M7 1.5a5.5 5.5 0 0 1 5.5 5.5" stroke="#6366f1" stroke-width="2" stroke-linecap="round"/>
+  </svg>
+  Rendering…
+</div>
 
 <div id="chart-area"></div>
 
@@ -199,51 +216,14 @@ if ('serviceWorker' in navigator) {
 }
 
 // ── UI ───────────────────────────────────────────────────────────────
-const textarea  = document.getElementById('spec');
-const status    = document.getElementById('status');
-const loader    = document.getElementById('chart-loader');
+const textarea = document.getElementById('spec');
 
 document.getElementById('examples').addEventListener('change', e => {
   const spec = EXAMPLES[e.target.value];
-  if (spec) textarea.value = JSON.stringify(spec, null, 2);
+  if (!spec) return;
+  textarea.value = JSON.stringify(spec, null, 2);
+  textarea.dispatchEvent(new Event('input')); // let htmx pick it up
 });
-
-document.getElementById('render-btn').addEventListener('click', render);
-textarea.addEventListener('keydown', e => {
-  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') render();
-});
-
-function setStatus(msg, type = '') {
-  status.textContent = msg;
-  status.className = type;
-}
-
-async function render() {
-  const text = textarea.value.trim();
-  if (!text) { setStatus('Paste a Vega-Lite spec first.', 'error'); return; }
-
-  // Validate JSON client-side before posting.
-  try { JSON.parse(text); } catch (e) { setStatus('JSON error: ' + e.message, 'error'); return; }
-
-  setStatus('Posting spec\u2026');
-  try {
-    const res = await fetch('/demo/api/plot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: text,
-    });
-    if (!res.ok) { setStatus('Server error: ' + res.status, 'error'); return; }
-  } catch (e) {
-    setStatus('POST failed: ' + e.message, 'error'); return;
-  }
-
-  setStatus('Rendering\u2026');
-  htmx.trigger(loader, 'plotReady');
-}
-
-// Reflect hx-plot lifecycle events in the status bar.
-document.getElementById('chart-area').addEventListener('hx-plot:render-done', () => setStatus('Rendered.', 'ok'));
-document.getElementById('chart-area').addEventListener('hx-plot:error', e => setStatus('Render error: ' + e.detail.error.message, 'error'));
 
 // ── pre-load scatter on first visit ─────────────────────────────────────────
 window.addEventListener('load', () => {

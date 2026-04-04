@@ -14,10 +14,17 @@ self.addEventListener('fetch', e => {
   if (e.request.method === 'POST') {
     e.respondWith(
       e.request.text().then(body => {
+        // Accept raw JSON or form-encoded (htmx posts textarea as name=value).
+        const ct = e.request.headers.get('content-type') || '';
+        if (ct.includes('application/x-www-form-urlencoded')) {
+          body = new URLSearchParams(body).get('spec') ?? body;
+        }
         try {
-          JSON.parse(body); // validate
+          JSON.parse(body);
           stored = body;
-          return new Response(null, { status: 204 });
+          return new Response(stored, {
+            headers: { 'Content-Type': 'application/json' },
+          });
         } catch {
           return new Response('Invalid JSON', { status: 400 });
         }
@@ -27,13 +34,10 @@ self.addEventListener('fetch', e => {
   }
 
   if (e.request.method === 'GET') {
-    if (stored === null) {
-      e.respondWith(new Response('No spec stored yet', { status: 404 }));
-    } else {
-      e.respondWith(new Response(stored, {
-        headers: { 'Content-Type': 'application/json' },
-      }));
-    }
+    e.respondWith(stored === null
+      ? new Response('No spec stored yet', { status: 404 })
+      : new Response(stored, { headers: { 'Content-Type': 'application/json' } }),
+    );
     return;
   }
 });
