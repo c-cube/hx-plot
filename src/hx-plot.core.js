@@ -8,24 +8,14 @@ let _depsPromise = null;
 function getDeps() {
   if (!_depsPromise) {
     log('deps: loading');
-    _depsPromise = _loadDeps().then(deps => {
-      log('deps: ready');
-      return deps;
-    }, err => {
-      _depsPromise = null; // allow retry
-      log('deps: failed —', err.message);
-      throw err;
-    });
+    _depsPromise = _loadDeps().then(
+      deps => { log('deps: ready'); return deps; },
+      err  => { _depsPromise = null; log('deps: failed —', err.message); throw err; },
+    );
   }
   return _depsPromise;
 }
 
-// Kick off dep loading eagerly so charts don't wait on first render.
-export function prefetchDeps() {
-  getDeps().catch(() => {});
-}
-
-// Dispatch a custom event on `target` for observability.
 function emit(target, type, detail = {}) {
   target.dispatchEvent(new CustomEvent(type, { bubbles: true, detail }));
 }
@@ -34,57 +24,34 @@ function log(...args) {
   console.debug(PREFIX, ...args);
 }
 
-function containerLabel(el) {
-  return el.id || el.getAttribute('data-plot-id') || el.tagName.toLowerCase();
-}
-
 async function renderSpec(spec, container) {
-  log('render: start', containerLabel(container));
+  const label = container.id || container.tagName.toLowerCase();
+  log('render: start', label);
   emit(container, 'hx-plot:render-start', { spec });
   const { vega, vegaLite } = await getDeps();
-
-  // Abort if the container was removed from the DOM while deps loaded.
-  if (!container.isConnected) {
-    log('render: aborted (detached)', containerLabel(container));
-    return;
-  }
-
-  const compiled = vegaLite.compile(spec);
-  const view = new vega.View(vega.parse(compiled.spec), {
-    renderer: 'svg',
-    container,
-    hover: true,
-  });
-  await view.runAsync();
-  log('render: done', containerLabel(container));
+  if (!container.isConnected) { log('render: aborted (detached)', label); return; }
+  await new vega.View(vega.parse(vegaLite.compile(spec).spec), {
+    renderer: 'svg', container, hover: true,
+  }).runAsync();
+  log('render: done', label);
   emit(container, 'hx-plot:render-done', { spec });
 }
 
 async function renderPending(root) {
   const nodes = Array.from(root.querySelectorAll(`.${PENDING_CLASS}`));
-  if (nodes.length) log('pending: found', nodes.length, 'in', root.id || root.className);
+  if (nodes.length) log('pending: found', nodes.length, 'in', root.id || root.tagName);
   for (const node of nodes) {
-    // Remove class first so a concurrent swap doesn't double-render.
     node.classList.remove(PENDING_CLASS);
-    try {
-      const spec = JSON.parse(node.dataset.vl);
-      await renderSpec(spec, node);
-    } catch (e) {
-      node.classList.add(PENDING_CLASS); // restore so retry is possible
-      log('pending: render error —', e.message);
-      console.error(PREFIX, e);
-    }
+    renderSpec(JSON.parse(node.dataset.vl), node).catch(e => console.error(PREFIX, e));
   }
 }
 
-// Handle inline hx-plot elements on initial page load.
-// Extension onEvent('htmx:load') is NOT reliable for elements that have no
-// hx-get/hx-post, so we use a document-level htmx:load listener instead.
+// htmx:load fires for every element htmx processes, including the document
+// body on init — so this catches both initial inline specs and dynamically
+// added hx-ext elements.
 function initInline(root) {
-  const elts = [
-    ...(root.matches?.(INLINE_SELECTOR) ? [root] : []),
-    ...root.querySelectorAll(INLINE_SELECTOR),
-  ];
+  const elts = root.matches?.(INLINE_SELECTOR) ? [root] : [];
+  elts.push(...root.querySelectorAll(INLINE_SELECTOR));
   for (const elt of elts) {
     const selector = elt.getAttribute('hx-plot');
     const src = document.querySelector(selector);
@@ -92,46 +59,33 @@ function initInline(root) {
     const t = elt.getAttribute('hx-target');
     const target = (t && t !== 'this') ? document.querySelector(t) : elt;
     if (!target) { console.error(PREFIX, 'target not found:', t); continue; }
-    log('inline: rendering', selector, '→', t || '(self)');
+    log('inline: rendering', selector, '\u2192', t || '(self)');
     renderSpec(JSON.parse(src.textContent), target).catch(e => console.error(PREFIX, e));
   }
 }
 
 export function register(loadDeps) {
   _loadDeps = loadDeps;
+  getDeps().catch(() => {}); // prefetch
 
-  // Eagerly start loading deps as soon as the extension is registered.
-  prefetchDeps();
-
-  // Use document-level listeners for both htmx:load and htmx:afterSwap.
-  // Extension onEvent() is only invoked for the element that initiated the
-  // request, not for external targets — so it misses most render triggers.
-
-  document.addEventListener('htmx:load', evt => {
-    // Handles inline hx-plot specs and dynamically added hx-ext elements.
-    initInline(evt.detail.elt);
-  });
-
+  // document-level listeners: extension onEvent() only fires for the
+  // initiating element, missing external targets and static elements.
+  document.addEventListener('htmx:load', evt => initInline(evt.detail.elt));
   document.addEventListener('htmx:afterSwap', evt => {
-    // Render any pending divs swapped into the target.
     const root = evt.detail.target ?? evt.detail.elt;
-    if (root) {
-      log('afterSwap: checking for pending in', containerLabel(root));
-      renderPending(root);
-    }
+    if (root) { log('afterSwap:', root.id || root.tagName); renderPending(root); }
   });
 
   htmx.defineExtension('plot', {
     transformResponse(text) {
       try {
-        JSON.parse(text); // validate JSON
+        JSON.parse(text);
         const div = document.createElement('div');
         div.className = PENDING_CLASS;
         div.dataset.vl = text;
-        log('transform: queued pending div');
         return div.outerHTML;
       } catch (e) {
-        console.error(PREFIX, 'transformResponse: invalid JSON —', e.message);
+        console.error(PREFIX, 'invalid JSON response —', e.message);
         return text;
       }
     },
