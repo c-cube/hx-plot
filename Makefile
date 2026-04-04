@@ -26,6 +26,9 @@ update:
 clean:
 	rm -rf dist
 
+test:
+	npx playwright test
+
 lint:
 	$(BIOME) lint src/
 
