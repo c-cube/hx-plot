@@ -54,6 +54,9 @@
     textarea:focus { outline: 2px solid #2563eb; border-color: transparent; }
 
     .htmx-indicator { opacity: 0; transition: opacity 150ms; pointer-events: none; }
+    #sine-out { view-transition-name: sine-chart; }
+    ::view-transition-old(sine-chart),
+    ::view-transition-new(sine-chart) { animation-duration: 0.3s; animation-timing-function: ease-in-out; }
     .htmx-request .htmx-indicator,
     .htmx-indicator.htmx-request { opacity: 1; }
 
@@ -171,7 +174,7 @@
      hx-get="/api/sine"
      hx-trigger="load, every 1s"
      hx-target="#sine-out"
-     hx-swap="innerHTML"></div>
+     hx-swap="innerHTML transition:true"></div>
 <div id="sine-out"></div>
 
 <hr style="margin: 2.5rem 0 1.5rem; border: none; border-top: 1px solid #e5e7eb;">
