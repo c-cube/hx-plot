@@ -1,6 +1,8 @@
 # hx-plot
 
-An [htmx](https://htmx.org) extension for rendering [Vega-Lite](https://vega.github.io/vega-lite/) charts from JSON.
+**hx-plot** is an [htmx](https://htmx.org) extension that renders [Vega-Lite](https://vega.github.io/vega-lite/) charts directly from JSON — inline on the page or fetched from a server endpoint. Add `hx-ext="plot"` to any element and point it at a JSON spec; htmx handles the rest.
+
+> **[Live playground →](https://c-cube.github.io/hx-plot/)** · [GitHub](https://github.com/c-cube/hx-plot)
 
 Two builds are available:
 
@@ -88,6 +90,110 @@ Layered charts, facets, and all other Vega-Lite features work as-is.
 | `hx-target="#id"` | Where to render the chart (defaults to the element itself) |
 | `hx-trigger="..."` | Standard htmx trigger — `load`, `every 2s`, `click`, etc. |
 | `hx-swap="innerHTML transition:true"` | Enable View Transitions API on swap |
+
+## Events
+
+| Event | Fired on | Detail |
+|-------|----------|--------|
+| `hx-plot:render-start` | container | `{ spec }` |
+| `hx-plot:render-done` | container | `{ spec }` |
+| `hx-plot:error` | container (or `document`) | `{ error, spec? }` |
+
+All events bubble. Listen on a parent element to catch errors from multiple charts.
+
+## Full examples
+
+### Inline JSON
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/htmx.org@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hx-plot/dist/hx-plot.min.js"></script>
+</head>
+<body>
+
+<script id="spec" type="application/json">
+{
+  "mark": "point",
+  "data": {"values": [{"x": 1, "y": 2}, {"x": 2, "y": 4}, {"x": 3, "y": 1}]},
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative"},
+    "y": {"field": "y", "type": "quantitative"}
+  }
+}
+</script>
+
+<div hx-ext="plot" hx-plot="#spec" hx-target="#chart"></div>
+<div id="chart"></div>
+
+</body>
+</html>
+```
+
+### Fetch from URL (e.g. on page load)
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/htmx.org@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hx-plot/dist/hx-plot.min.js"></script>
+</head>
+<body>
+
+<div hx-ext="plot"
+     hx-get="/api/chart"
+     hx-trigger="load"
+     hx-target="#chart"></div>
+<div id="chart"></div>
+
+</body>
+</html>
+```
+
+### Live updates every 2 seconds with view transitions
+
+```html
+<!DOCTYPE html>
+<html>
+<head>
+  <script src="https://unpkg.com/htmx.org@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hx-plot/dist/hx-plot.min.js"></script>
+  <style>
+    #chart { view-transition-name: my-chart; }
+    ::view-transition-old(my-chart),
+    ::view-transition-new(my-chart) { animation-duration: 0.3s; }
+  </style>
+</head>
+<body>
+
+<div hx-ext="plot"
+     hx-get="/api/chart"
+     hx-trigger="load, every 2s"
+     hx-target="#chart"
+     hx-swap="innerHTML transition:true"></div>
+<div id="chart"></div>
+
+</body>
+</html>
+```
+
+### Error handling
+
+```html
+<div id="charts">
+  <div hx-ext="plot" hx-get="/api/chart" hx-trigger="load" hx-target="#chart"></div>
+  <div id="chart"></div>
+</div>
+
+<script>
+  document.getElementById('charts').addEventListener('hx-plot:error', e => {
+    console.error('chart failed:', e.detail.error);
+  });
+</script>
+```
 
 ## Building
 
