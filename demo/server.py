@@ -15,9 +15,12 @@ class Handler(SimpleHTTPRequestHandler):
             data = [{"x": round(i * 0.1, 2), "y": round(math.sin(i * 0.2 + t), 4)}
                     for i in range(64)]
             body = json.dumps({
-                "marks": [{"type": "line", "data": data, "x": "x", "y": "y"}],
-                "y": {"domain": [-1.2, 1.2]},
-                "x": {"label": None},
+                "mark": "line",
+                "data": {"values": data},
+                "encoding": {
+                    "x": {"field": "x", "type": "quantitative", "axis": {"title": None}},
+                    "y": {"field": "y", "type": "quantitative", "scale": {"domain": [-1.2, 1.2]}}
+                },
                 "height": 200
             }).encode()
             self.send_response(200)

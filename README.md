@@ -1,24 +1,39 @@
-# htmx-plot
+# hx-plot
 
-An [htmx](https://htmx.org) extension for rendering [Observable Plot](https://observablehq.com/plot/) charts from JSON. Plot is bundled in — no extra script tags needed.
+An [htmx](https://htmx.org) extension for rendering [Vega-Lite](https://vega.github.io/vega-lite/) charts from JSON.
+
+Two builds are available:
+
+| File | Size | How it loads Vega |
+|------|------|-------------------|
+| `hx-plot.min.js` | ~5 KB | Lazy CDN import on first use |
+| `hx-plot.full.min.js` | ~1.3 MB | Fully self-contained |
 
 ## Usage
 
 ```html
 <script src="https://unpkg.com/htmx.org@2"></script>
-<script src="htmx-plot.js"></script>
+
+<!-- slim: loads vega + vega-lite from jsDelivr at runtime -->
+<script src="hx-plot.min.js"></script>
+
+<!-- or: fully bundled, no CDN dependency -->
+<script src="hx-plot.full.min.js"></script>
 ```
 
 ### Inline JSON
 
-Read plot options from a `<script type="application/json">` element on the page. Renders once on load.
+Read a Vega-Lite spec from a `<script type="application/json">` element. Renders once on load.
 
 ```html
 <script id="cfg" type="application/json">
 {
-  "marks": [
-    { "type": "dot", "data": [{"x": 1, "y": 2}, {"x": 2, "y": 4}], "x": "x", "y": "y" }
-  ]
+  "mark": "point",
+  "data": {"values": [{"x": 1, "y": 2}, {"x": 2, "y": 4}]},
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative"},
+    "y": {"field": "y", "type": "quantitative"}
+  }
 }
 </script>
 
@@ -28,7 +43,7 @@ Read plot options from a `<script type="application/json">` element on the page.
 
 ### Fetch from URL
 
-Fetch plot options as JSON from a server endpoint. Supports all htmx trigger and swap options.
+Fetch a Vega-Lite spec as JSON from a server endpoint. Supports all htmx trigger and swap options.
 
 ```html
 <div hx-ext="plot" hx-get="/api/chart" hx-trigger="load" hx-target="#chart"></div>
@@ -48,32 +63,20 @@ Fetch plot options as JSON from a server endpoint. Supports all htmx trigger and
 
 ## JSON format
 
-Plot options are passed directly to [`Plot.plot(options)`](https://observablehq.com/plot/features/plots). Marks are described as plain objects with a `type` field matching an Observable Plot mark name:
+The JSON must be a valid [Vega-Lite spec](https://vega.github.io/vega-lite/docs/). It is passed directly to `vegaLite.compile()` then rendered with Vega.
 
 ```json
 {
-  "width": 640,
-  "height": 300,
-  "marks": [
-    {
-      "type": "line",
-      "data": [{"x": 0, "y": 0}, {"x": 1, "y": 1}],
-      "x": "x",
-      "y": "y"
-    },
-    {
-      "type": "dot",
-      "data": [{"x": 0, "y": 0}, {"x": 1, "y": 1}],
-      "x": "x",
-      "y": "y"
-    }
-  ]
+  "mark": "line",
+  "data": {"values": [{"x": 0, "y": 0}, {"x": 1, "y": 1}]},
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative"},
+    "y": {"field": "y", "type": "quantitative"}
+  }
 }
 ```
 
-`type` maps to `Plot.<type>(data, options)` — any mark listed in the [Observable Plot docs](https://observablehq.com/plot/marks) works: `line`, `dot`, `bar`, `barX`, `barY`, `area`, `text`, `ruleX`, `ruleY`, etc.
-
-All other top-level keys (`width`, `height`, `x`, `y`, `color`, `title`, …) are passed as-is to `Plot.plot()`.
+Layered charts, facets, and all other Vega-Lite features work as-is.
 
 ## Attributes
 
@@ -90,8 +93,8 @@ All other top-level keys (`width`, `height`, `x`, `y`, `color`, `title`, …) ar
 
 ```sh
 make install   # pnpm install
-make           # build dist/htmx-plot.js and dist/htmx-plot.min.js
+make           # build dist/hx-plot.min.js and dist/hx-plot.full.min.js
 make serve     # start dev server at http://localhost:8000/demo/demo.html
-make update    # upgrade @observablehq/plot and rebuild
+make update    # upgrade vega + vega-lite and rebuild
 make lint      # biome lint
 ```

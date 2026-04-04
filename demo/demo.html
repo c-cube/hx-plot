@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>htmx-plot demo</title>
+  <title>hx-plot demo</title>
   <script src="https://unpkg.com/htmx.org@2.0.4"></script>
-  <script src="../dist/htmx-plot.min.js"></script>
+  <script src="../dist/hx-plot.min.js"></script>
   <style>
     body { font-family: sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; }
     h2 { margin-top: 2rem; }
@@ -23,7 +23,7 @@
 </head>
 <body>
 
-<h1>htmx-plot demo</h1>
+<h1>hx-plot demo</h1>
 
 <!-- ── Case 1: inline JSON via hx-plot ───────────────────────────────────── -->
 <h2>Inline JSON (<code>hx-plot</code>)</h2>
@@ -31,12 +31,15 @@
 
 <script id="scatter-cfg" type="application/json">
 {
-  "marks": [
-    { "type": "dot", "data": [
-        {"x": 1, "y": 2}, {"x": 2, "y": 4}, {"x": 3, "y": 1},
-        {"x": 4, "y": 5}, {"x": 5, "y": 3}, {"x": 6, "y": 7}
-      ], "x": "x", "y": "y" }
-  ]
+  "mark": "point",
+  "data": {"values": [
+    {"x": 1, "y": 2}, {"x": 2, "y": 4}, {"x": 3, "y": 1},
+    {"x": 4, "y": 5}, {"x": 5, "y": 3}, {"x": 6, "y": 7}
+  ]},
+  "encoding": {
+    "x": {"field": "x", "type": "quantitative"},
+    "y": {"field": "y", "type": "quantitative"}
+  }
 }
 </script>
 

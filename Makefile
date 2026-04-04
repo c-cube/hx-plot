@@ -1,24 +1,30 @@
-build: install dist/htmx-plot.js dist/htmx-plot.min.js
+build: install dist/hx-plot.min.js dist/hx-plot.full.min.js
 
-dist/htmx-plot.js: src/htmx-plot.js node_modules/@observablehq/plot
+ESBUILD ?= node_modules/.pnpm/@esbuild+linux-x64@0.27.4/node_modules/@esbuild/linux-x64/bin/esbuild
+BIOME   ?= node_modules/.pnpm/@biomejs+cli-linux-x64@2.4.9/node_modules/@biomejs/cli-linux-x64/biome
+
+dist/hx-plot.min.js: src/hx-plot.js src/hx-plot.core.js node_modules/vega
 	mkdir -p dist
-	node_modules/.bin/esbuild src/htmx-plot.js --bundle --format=iife --outfile=dist/htmx-plot.js
+	$(ESBUILD) src/hx-plot.js --bundle --format=iife --minify --outfile=dist/hx-plot.min.js
 
-dist/htmx-plot.min.js: dist/htmx-plot.js
-	node_modules/.bin/esbuild dist/htmx-plot.js --minify --outfile=dist/htmx-plot.min.js
+dist/hx-plot.full.min.js: src/hx-plot.full.js src/hx-plot.core.js node_modules/vega
+	mkdir -p dist
+	$(ESBUILD) src/hx-plot.full.js --bundle --format=iife --minify --outfile=dist/hx-plot.full.min.js
+
+PNPM ?= pnpm
 
 install:
-	pnpm install
+	$(PNPM) install
 
 update:
-	pnpm update @observablehq/plot
+	$(PNPM) update vega vega-lite
 	$(MAKE) build
 
 clean:
 	rm -rf dist
 
 lint:
-	pnpm exec biome lint src/htmx-plot.js
+	$(BIOME) lint src/
 
-serve: dist/htmx-plot.js
+serve: dist/hx-plot.min.js
 	python3 demo/server.py
