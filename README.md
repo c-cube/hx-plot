@@ -95,6 +95,7 @@ Layered charts, facets, and all other Vega-Lite features work as-is.
 | `hx-target="#id"` | Where to render the chart (defaults to the element itself) |
 | `hx-trigger="..."` | Standard htmx trigger — `load`, `every 2s`, `click`, etc. |
 | `hx-swap="innerHTML transition:true"` | Enable View Transitions API on swap |
+| `hx-swap-on-error` | On error, replace the chart container with a `<div class="hx-plot-error">` |
 
 ## Events
 
