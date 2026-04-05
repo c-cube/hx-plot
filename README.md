@@ -8,8 +8,8 @@ Two builds are available:
 
 | File | Size | How it loads Vega |
 |------|------|-------------------|
-| `hx-plot.min.js` | ~5 KB | Lazy CDN import on first use |
-| `hx-plot.full.min.js` | ~1.3 MB | Fully self-contained |
+| `hx-plot.min.js` | ~2.5 KiB | Lazy CDN import on first use |
+| `hx-plot.full.min.js` | ~750 kiB | Fully self-contained |
 
 ## Usage
 
@@ -51,6 +51,11 @@ Fetch a Vega-Lite spec as JSON from a server endpoint. Supports all htmx trigger
 <div hx-ext="plot" hx-get="/api/chart" hx-trigger="load" hx-target="#chart"></div>
 <div id="chart"></div>
 ```
+
+### Error handling
+
+Upon error, a `ht-plot:error` event is emitted, and a message is printed
+on the console.
 
 ### Live updates with view transitions
 
